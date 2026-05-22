@@ -1,0 +1,22 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // Admin check function
+    function isAdmin() {
+      return request.auth != null && request.auth.token.email == 'darshjainteam@gmail.com';
+    }
+    
+    // User Profiles: Users can read and write their own profile, admin can read/write all
+    match /users/{userId} {
+      allow read, write: if request.auth != null && (request.auth.uid == userId || isAdmin());
+    }
+    
+    // Bookings: Users can create bookings for themselves, and read their own bookings, admin can read/write all
+    match /bookings/{bookingId} {
+      allow create: if request.auth != null;
+      allow read, update, delete: if request.auth != null && (request.auth.uid == resource.data.userId || isAdmin());
+    }
+  }
+}
